@@ -1,5 +1,6 @@
 import sys
-from PyQt5.QtWidgets import QApplication, QWidget, QPushButton, QHBoxLayout, QVBoxLayout, QMessageBox, QTextEdit, QLabel
+from PyQt5.QtWidgets import QApplication, QWidget, QPushButton, QHBoxLayout, QVBoxLayout, QMessageBox, QTextEdit, \
+    QLabel, QCheckBox
 from PyQt5.QtGui import QFont, QIcon, QColor, QPalette
 from PyQt5.QtCore import Qt
 import random
@@ -8,7 +9,17 @@ import json
 class SimulationApp(QWidget):
     def __init__(self):
         super().__init__()
+        self.include_pets_checkbox = QCheckBox("Include Cats and Dogs")
+        self.include_pets_checkbox.setChecked(False)  # Default to include pets
+        self.include_pets_checkbox.stateChanged.connect(self.on_include_pets_changed)
+        # Add include_pets_checkbox to your layout
         self.initUI()
+
+    def on_include_pets_changed(self, state):
+        if state == Qt.Checked:
+            self.include_pets_enabled = True
+        else:
+            self.include_pets_enabled = False
 
     def initUI(self):
         self.setWindowTitle('Sims 2 Randomizer')
@@ -77,6 +88,7 @@ class SimulationApp(QWidget):
 
         # Create layout for the main window
         main_layout = QVBoxLayout()
+        main_layout.addWidget(self.include_pets_checkbox)
         main_layout.addLayout(button_layout)
         main_layout.addWidget(self.info_display)
         main_layout.setContentsMargins(50, 20, 50, 20)
@@ -139,11 +151,14 @@ class SimulationApp(QWidget):
         # Randomize number of sims
         first_gender = random.choice(self.family_data['gender'])
         num_sims = random.randint(*self.family_data['nr_of_sims'])
-        family_text = f"Number of Sims: {num_sims}\n\n"
+        family_text = f"Number of Family Members: {num_sims}\n\n"
         family_text += f"Sim 1: Adult, {first_gender}\n"
 
         for i in range(1, num_sims):  # Start the loop from the second sim
-            age = random.choice(self.family_data['age'])
+            if self.include_pets_enabled:
+                age = random.choice(self.family_data['animal'])
+            else:
+                age = random.choice(self.family_data['age'])
             gender = random.choice(self.family_data['gender'])
             family_text += f"Sim {i + 1}: {age}, "
             family_text += f"{gender}\n"

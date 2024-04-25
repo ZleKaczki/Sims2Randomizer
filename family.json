@@ -1,5 +1,6 @@
 {
   "nr_of_sims": [1, 8],
-  "age": ["Toddler", "Child", "Teen", "Adult", "Elder", "Cat", "Dog"],
+  "age": ["Toddler", "Child", "Teen", "Adult", "Elder"],
+  "animal": ["Cat", "Dog", "Toddler", "Child", "Teen", "Adult", "Elder"],
   "gender": ["Male", "Female"]
 }
