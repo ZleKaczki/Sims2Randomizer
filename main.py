@@ -1,10 +1,11 @@
 import sys
 from PyQt5.QtWidgets import QApplication, QWidget, QPushButton, QHBoxLayout, QVBoxLayout, QMessageBox, QTextEdit, \
-    QLabel, QCheckBox
+    QLabel, QCheckBox, QInputDialog
 from PyQt5.QtGui import QFont, QIcon, QColor, QPalette
 from PyQt5.QtCore import Qt
 import random
 import json
+
 
 class SimulationApp(QWidget):
     def __init__(self):
@@ -12,7 +13,12 @@ class SimulationApp(QWidget):
         self.include_pets_checkbox = QCheckBox("Include Cats and Dogs")
         self.include_pets_checkbox.setChecked(False)  # Default to include pets
         self.include_pets_checkbox.stateChanged.connect(self.on_include_pets_changed)
-        # Add include_pets_checkbox to your layout
+
+        self.add_event_button = QPushButton("Add Event")
+        self.add_event_button.clicked.connect(self.add_event)
+
+        self.remove_event_button = QPushButton("Remove Event")
+        self.remove_event_button.clicked.connect(self.remove_event)
         self.initUI()
 
     def on_include_pets_changed(self, state):
@@ -84,6 +90,7 @@ class SimulationApp(QWidget):
         button_layout.addWidget(self.sim_button)
         button_layout.addWidget(self.event_button)
         button_layout.addWidget(self.family_button)
+
         button_layout.setAlignment(Qt.AlignCenter)
 
         # Create layout for the main window
@@ -92,6 +99,8 @@ class SimulationApp(QWidget):
         main_layout.addLayout(button_layout)
         main_layout.addWidget(self.info_display)
         main_layout.setContentsMargins(50, 20, 50, 20)
+        main_layout.addWidget(self.add_event_button)
+        main_layout.addWidget(self.remove_event_button)
 
         self.setLayout(main_layout)
         self.setWindowState(Qt.WindowMaximized)
@@ -146,6 +155,59 @@ class SimulationApp(QWidget):
 
         # Display text
         self.append_to_info_display(text_event)
+
+    def load_events(self):
+        # Load events from the JSON file
+        try:
+            with open("events.json", "r") as file:
+                self.events = json.load(file)['events']
+        except FileNotFoundError:
+            self.events = []
+
+    def save_events(self):
+        # Save events to the JSON file
+        with open("events.json", "w") as file:
+            json.dump({'events': self.events}, file, indent=4)
+
+    def add_event(self):
+        # Open a dialog to get the new event from the user
+        new_event, ok_pressed = QInputDialog.getText(self, "Add Event", "Enter the new event:")
+
+        # If the user pressed OK and entered a new event
+        if ok_pressed and new_event.strip():
+            # Add the new event to the list of events
+            self.events['events'].append(new_event)
+            self.save_events()  # Save events to the JSON file
+            QMessageBox.information(self, "Success", "Event added successfully.")
+            self.load_events()  # Reload events to update the application state
+        elif ok_pressed and not new_event.strip():
+            QMessageBox.warning(self, "Error", "Event name cannot be empty.")
+        else:
+            pass
+
+    def remove_event(self):
+        if not self.events['events']:
+            QMessageBox.warning(self, "Error", "No events available.")
+            return
+
+        # Create a list of event names for the user to select from
+        event_names = self.events['events']
+
+        # Open a dialog for the user to select an event to remove
+        selected_event, ok_pressed = QInputDialog.getItem(self, "Remove Event", "Select an event to remove:",
+                                                          event_names, editable=False)
+
+        # If the user pressed OK and selected an event
+        if ok_pressed and selected_event:
+            # Remove the selected event from the list of events
+            self.events['events'].remove(selected_event)
+            self.save_events()  # Save events to the JSON file
+            QMessageBox.information(self, "Success", "Event removed successfully.")
+            self.load_events()  # Reload events to update the application state
+        elif ok_pressed and not selected_event:
+            QMessageBox.warning(self, "Error", "Please select an event to remove.")
+        else:
+            pass
 
     def randomize_family(self):
         # Randomize number of sims
