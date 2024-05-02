@@ -160,14 +160,15 @@ class SimulationApp(QWidget):
         # Load events from the JSON file
         try:
             with open("events.json", "r") as file:
-                self.events = json.load(file)['events']
+                data = json.load(file)
+                self.events = data.get('events', [])  # Access events directly
         except FileNotFoundError:
             self.events = []
 
     def save_events(self):
         # Save events to the JSON file
         with open("events.json", "w") as file:
-            json.dump({'events': self.events}, file, indent=4)
+            json.dump(self.events, file, indent=4)
 
     def add_event(self):
         # Open a dialog to get the new event from the user
