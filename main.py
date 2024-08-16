@@ -10,8 +10,10 @@ import json
 class SimulationApp(QWidget):
     def __init__(self):
         super().__init__()
+        self.include_pets_enabled = False  # Initialize to False
+
         self.include_pets_checkbox = QCheckBox("Include Cats and Dogs")
-        self.include_pets_checkbox.setChecked(False)  # Default to include pets
+        self.include_pets_checkbox.setChecked(False)  # Default to not include pets
         self.include_pets_checkbox.stateChanged.connect(self.on_include_pets_changed)
 
         self.add_event_button = QPushButton("Add Event")
@@ -42,8 +44,7 @@ class SimulationApp(QWidget):
             self.color = character_data['fav_color']
 
         # Load events from JSON file
-        with open('events.json') as f:
-            self.events = json.load(f)
+        self.load_events()
 
         with open('family.json') as f:
             self.family_data = json.load(f)
@@ -148,7 +149,12 @@ class SimulationApp(QWidget):
 
         # Append new text to existing text
         self.append_to_info_display(result_text)
+
     def random_event(self):
+        if not self.events['events']:
+            QMessageBox.warning(self, "Error", "No events available to randomize.")
+            return
+
         # Random selection
         random_event = random.choice(self.events['events'])
         text_event = f"{random_event}\n_______"
@@ -160,10 +166,9 @@ class SimulationApp(QWidget):
         # Load events from the JSON file
         try:
             with open("events.json", "r") as file:
-                data = json.load(file)
-                self.events = data.get('events', [])  # Access events directly
+                self.events = json.load(file)
         except FileNotFoundError:
-            self.events = []
+            self.events = {"events": []}
 
     def save_events(self):
         # Save events to the JSON file
@@ -180,11 +185,8 @@ class SimulationApp(QWidget):
             self.events['events'].append(new_event)
             self.save_events()  # Save events to the JSON file
             QMessageBox.information(self, "Success", "Event added successfully.")
-            self.load_events()  # Reload events to update the application state
         elif ok_pressed and not new_event.strip():
             QMessageBox.warning(self, "Error", "Event name cannot be empty.")
-        else:
-            pass
 
     def remove_event(self):
         if not self.events['events']:
@@ -204,11 +206,8 @@ class SimulationApp(QWidget):
             self.events['events'].remove(selected_event)
             self.save_events()  # Save events to the JSON file
             QMessageBox.information(self, "Success", "Event removed successfully.")
-            self.load_events()  # Reload events to update the application state
         elif ok_pressed and not selected_event:
             QMessageBox.warning(self, "Error", "Please select an event to remove.")
-        else:
-            pass
 
     def randomize_family(self):
         # Randomize number of sims
@@ -241,6 +240,7 @@ class SimulationApp(QWidget):
 
         # Hide the scroll bar
         self.info_display.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
+
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)
